@@ -6,7 +6,7 @@ Financial literacy is understudied in today's day and age, and it should be vita
 
 ## Project Overview
 
-My Budget Hero is a personal budgeting application built with Python and Tkinter that lets users track and manage their transactions and budgets. The app provides real-time financial tracking with an intuitive interface designed for clarity and simplicity.
+This is a personal budgeting application built with Python and Tkinter that lets users track and manage their transactions and budgets. The app provides real-time financial tracking with an intuitive interface designed for clarity and simplicity.
 
 ### Key Features
 

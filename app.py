@@ -12,7 +12,7 @@ from tabs.budgets_tab import BudgetsTab
 class MainWindow(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.title("My Budget Hero")
+        self.title("Personal Budgeting Application")
         self.geometry("1000x650")
 
         # Initialize database
