@@ -11,7 +11,6 @@ class TransactionsTab(ttk.Frame):
         super().__init__(parent)
         self.main_window = main_window
         self.session = main_window.session
-        self._showing_planned_only = False
         self._item_ids = {}  # Map treeview item IDs to transaction IDs
         self._build_ui()
         self.load_data()
@@ -94,8 +93,8 @@ class TransactionsTab(ttk.Frame):
             side="left", padx=4)
         ttk.Button(buttons, text="Delete", command=self.delete_selected).pack(
             side="left", padx=4)
-        ttk.Button(buttons, text="Toggle Planned",
-                   command=self.toggle_planned).pack(side="left", padx=4)
+        ttk.Button(buttons, text="Refresh", command=self.load_data).pack(
+            side="left", padx=4)
 
     def update_dropdowns(self):
         """Update account and category dropdowns from database."""
@@ -141,16 +140,16 @@ class TransactionsTab(ttk.Frame):
             category_name = category.name if category else "Unknown"
 
             item_id = self.tree.insert("", "end",
-                                     values=[
-                                         txn.date.isoformat(),
-                                         account_name,
-                                         category_name,
-                                         txn.payee or "",
-                                         f"{float(txn.amount):,.2f}",
-                                         txn.note or "",
-                                         "Yes" if txn.planned else "No"
-                                     ],
-                                     tags=("planned",) if txn.planned else ())
+                                       values=[
+                                           txn.date.isoformat(),
+                                           account_name,
+                                           category_name,
+                                           txn.payee or "",
+                                           f"{float(txn.amount):,.2f}",
+                                           txn.note or "",
+                                           "Yes" if txn.planned else "No"
+                                       ],
+                                       tags=("planned",) if txn.planned else ())
             self._item_ids[item_id] = txn.id
 
         self.apply_filters()
@@ -225,14 +224,21 @@ class TransactionsTab(ttk.Frame):
                 pass
         self.sum_label.config(text=f"Sum: ${total:,.2f}")
 
-    def _update_account_balance(self, account_id, amount_change, is_planned):
+    def _update_account_balance(self, account_id, amount, category_id, is_planned):
         """Update account balance when transaction is posted (not planned)."""
         if is_planned:
             return
 
         account = self.session.query(Account).filter_by(id=account_id).first()
-        if account:
-            account.balance = float(account.balance) + amount_change
+        category = self.session.query(
+            Category).filter_by(id=category_id).first()
+
+        if account and category:
+            # Income increases balance, Expense decreases balance
+            if category.type == "Income":
+                account.balance = float(account.balance) + amount
+            else:  # Expense
+                account.balance = float(account.balance) - amount
             self.session.commit()
 
     # Dialogs/actions
@@ -305,7 +311,7 @@ class TransactionsTab(ttk.Frame):
                 # Parse date
                 try:
                     txn_date = date.fromisoformat(date_var.get())
-                except:
+                except (ValueError, AttributeError):
                     messagebox.showerror("Error", "Invalid date format.")
                     return
 
@@ -326,7 +332,8 @@ class TransactionsTab(ttk.Frame):
                 self.session.commit()
 
                 # Update account balance if not planned
-                self._update_account_balance(account.id, amount, planned)
+                self._update_account_balance(
+                    account.id, amount, category.id, planned)
 
                 self.load_data()
                 self.main_window.refresh_all_tabs()
@@ -336,8 +343,12 @@ class TransactionsTab(ttk.Frame):
                 messagebox.showerror(
                     "Error", f"Failed to save transaction: {str(e)}")
 
-        ttk.Button(d, text="Save", command=save).grid(
-            row=7, column=0, columnspan=2, pady=10)
+        button_frame = ttk.Frame(d)
+        button_frame.grid(row=7, column=0, columnspan=2, pady=10)
+        ttk.Button(button_frame, text="Save",
+                   command=save).pack(side="left", padx=5)
+        ttk.Button(button_frame, text="Cancel",
+                   command=d.destroy).pack(side="left", padx=5)
 
     def edit_transaction(self):
         sel = self._selected()
@@ -390,7 +401,7 @@ class TransactionsTab(ttk.Frame):
         categories = self.session.query(Category).all()
         category_names = [cat.name for cat in categories]
         category_combo = ttk.Combobox(d, textvariable=category_var,
-                                     values=category_names, width=20, state="readonly")
+                                      values=category_names, width=20, state="readonly")
         row(2, "Category", category_combo)
 
         row(3, "Payee", ttk.Entry(d, textvariable=payee_var, width=22))
@@ -428,7 +439,7 @@ class TransactionsTab(ttk.Frame):
                 # Parse date
                 try:
                     txn_date = date.fromisoformat(date_var.get())
-                except:
+                except (ValueError, AttributeError):
                     messagebox.showerror("Error", "Invalid date format.")
                     return
 
@@ -439,11 +450,13 @@ class TransactionsTab(ttk.Frame):
                 old_amount = float(transaction.amount)
                 old_planned = transaction.planned
                 old_account_id = transaction.account_id
+                old_category_id = transaction.category_id
 
                 # Reverse old transaction effect on old account (if it was posted)
                 if not old_planned:
+                    # Reverse: use negative amount to undo the original transaction
                     self._update_account_balance(
-                        old_account_id, -old_amount, False)
+                        old_account_id, -old_amount, old_category_id, False)
 
                 # Update transaction
                 transaction.date = txn_date
@@ -458,7 +471,8 @@ class TransactionsTab(ttk.Frame):
 
                 # Apply new transaction effect on new account (if it's posted)
                 if not planned:
-                    self._update_account_balance(account.id, amount, False)
+                    self._update_account_balance(
+                        account.id, amount, category.id, False)
 
                 self.load_data()
                 self.main_window.refresh_all_tabs()
@@ -468,8 +482,12 @@ class TransactionsTab(ttk.Frame):
                 messagebox.showerror(
                     "Error", f"Failed to update transaction: {str(e)}")
 
-        ttk.Button(d, text="Save", command=save).grid(
-            row=7, column=0, columnspan=2, pady=10)
+        button_frame = ttk.Frame(d)
+        button_frame.grid(row=7, column=0, columnspan=2, pady=10)
+        ttk.Button(button_frame, text="Save",
+                   command=save).pack(side="left", padx=5)
+        ttk.Button(button_frame, text="Cancel",
+                   command=d.destroy).pack(side="left", padx=5)
 
     def delete_selected(self):
         selected = self._selected()
@@ -487,10 +505,11 @@ class TransactionsTab(ttk.Frame):
 
         if messagebox.askyesno("Confirm Delete", "Delete this transaction?"):
             try:
-                # Update account balance if not planned
+                # Update account balance if not planned (reverse the transaction)
                 if not transaction.planned:
+                    # Reverse: use negative amount to undo the original transaction
                     self._update_account_balance(
-                        transaction.account_id, -float(transaction.amount), False)
+                        transaction.account_id, -float(transaction.amount), transaction.category_id, False)
 
                 self.session.delete(transaction)
                 self.session.commit()
@@ -500,14 +519,3 @@ class TransactionsTab(ttk.Frame):
                 self.session.rollback()
                 messagebox.showerror(
                     "Error", f"Failed to delete transaction: {str(e)}")
-
-    def toggle_planned(self):
-        """Toggle showing planned transactions only."""
-        if self._showing_planned_only:
-            self.show_var.set("Both")
-            self._showing_planned_only = False
-        else:
-            self.show_var.set("Planned")
-            self._showing_planned_only = True
-        self.apply_filters()
-

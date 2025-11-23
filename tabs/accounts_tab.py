@@ -32,8 +32,6 @@ class AccountsTab(ttk.Frame):
 
         ttk.Button(bar, text="Apply", command=self.apply_filters).pack(
             side="left", padx=4)
-        ttk.Button(bar, text="Refresh", command=self.load_data).pack(
-            side="left", padx=4)
 
         # Accounts table
         cols = ("Name", "Type", "Balance")
@@ -59,6 +57,8 @@ class AccountsTab(ttk.Frame):
         ttk.Button(buttons, text="Edit", command=self.edit_account).pack(
             side="left", padx=4)
         ttk.Button(buttons, text="Delete", command=self.delete_selected).pack(
+            side="left", padx=4)
+        ttk.Button(buttons, text="Refresh", command=self.load_data).pack(
             side="left", padx=4)
 
     def load_data(self):
@@ -174,8 +174,10 @@ class AccountsTab(ttk.Frame):
                 messagebox.showerror(
                     "Error", f"Failed to save account: {str(e)}")
 
-        ttk.Button(d, text="Save", command=save).grid(
-            row=3, column=0, columnspan=2, pady=10)
+        button_frame = ttk.Frame(d)
+        button_frame.grid(row=3, column=0, columnspan=2, pady=10)
+        ttk.Button(button_frame, text="Save", command=save).pack(side="left", padx=5)
+        ttk.Button(button_frame, text="Cancel", command=d.destroy).pack(side="left", padx=5)
 
     def edit_account(self):
         sel = self._selected()
@@ -245,8 +247,10 @@ class AccountsTab(ttk.Frame):
                 messagebox.showerror(
                     "Error", f"Failed to update account: {str(e)}")
 
-        ttk.Button(d, text="Save", command=save).grid(
-            row=3, column=0, columnspan=2, pady=10)
+        button_frame = ttk.Frame(d)
+        button_frame.grid(row=3, column=0, columnspan=2, pady=10)
+        ttk.Button(button_frame, text="Save", command=save).pack(side="left", padx=5)
+        ttk.Button(button_frame, text="Cancel", command=d.destroy).pack(side="left", padx=5)
 
     def delete_selected(self):
         selected = self._selected()

@@ -31,8 +31,6 @@ class CategoriesTab(ttk.Frame):
 
         ttk.Button(bar, text="Apply", command=self.apply_filters).pack(
             side="left", padx=4)
-        ttk.Button(bar, text="Refresh", command=self.load_data).pack(
-            side="left", padx=4)
 
         # Categories table
         cols = ("Name", "Type", "Description")
@@ -42,7 +40,7 @@ class CategoriesTab(ttk.Frame):
             self.tree.heading(c, text=c)
         self.tree.column("Name", width=200)
         self.tree.column("Type", width=120)
-        self.tree.column("Description", width=400)
+        self.tree.column("Description", width=200)
         self.tree.pack(fill="both", expand=True, padx=6, pady=6)
 
         # Buttons
@@ -53,6 +51,8 @@ class CategoriesTab(ttk.Frame):
         ttk.Button(buttons, text="Edit", command=self.edit_category).pack(
             side="left", padx=4)
         ttk.Button(buttons, text="Delete", command=self.delete_selected).pack(
+            side="left", padx=4)
+        ttk.Button(buttons, text="Refresh", command=self.load_data).pack(
             side="left", padx=4)
 
     def load_data(self):
@@ -120,7 +120,7 @@ class CategoriesTab(ttk.Frame):
         row(0, "Name", ttk.Entry(d, textvariable=name_var, width=20))
         row(1, "Type", ttk.Combobox(d, textvariable=type_var, values=[
             "Income", "Expense"], width=18, state="readonly"))
-        row(2, "Description", ttk.Entry(d, textvariable=description_var, width=25))
+        row(2, "Description", ttk.Entry(d, textvariable=description_var, width=22))
 
         def save():
             if not name_var.get().strip():
@@ -148,8 +148,12 @@ class CategoriesTab(ttk.Frame):
                 messagebox.showerror(
                     "Error", f"Failed to save category: {str(e)}")
 
-        ttk.Button(d, text="Save", command=save).grid(
-            row=3, column=0, columnspan=2, pady=10)
+        button_frame = ttk.Frame(d)
+        button_frame.grid(row=3, column=0, columnspan=2, pady=10)
+        ttk.Button(button_frame, text="Save",
+                   command=save).pack(side="left", padx=5)
+        ttk.Button(button_frame, text="Cancel",
+                   command=d.destroy).pack(side="left", padx=5)
 
     def edit_category(self):
         sel = self._selected()
@@ -213,8 +217,12 @@ class CategoriesTab(ttk.Frame):
                 messagebox.showerror(
                     "Error", f"Failed to update category: {str(e)}")
 
-        ttk.Button(d, text="Save", command=save).grid(
-            row=3, column=0, columnspan=2, pady=10)
+        button_frame = ttk.Frame(d)
+        button_frame.grid(row=3, column=0, columnspan=2, pady=10)
+        ttk.Button(button_frame, text="Save",
+                   command=save).pack(side="left", padx=5)
+        ttk.Button(button_frame, text="Cancel",
+                   command=d.destroy).pack(side="left", padx=5)
 
     def delete_selected(self):
         selected = self._selected()

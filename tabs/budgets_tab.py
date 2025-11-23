@@ -30,8 +30,6 @@ class BudgetsTab(ttk.Frame):
         self.year_var.trace_add("write", lambda *_: self.load_data())
         ttk.Combobox(bar, textvariable=self.year_var, values=years,
                      width=6, state="readonly").pack(side="left", padx=2)
-        ttk.Button(bar, text="Refresh", command=self.load_data).pack(
-            side="left", padx=4)
 
         cols = ("Category", "Target", "Spent", "Remaining", "Status")
         self.tree = ttk.Treeview(self, columns=cols, show="headings")
@@ -50,6 +48,8 @@ class BudgetsTab(ttk.Frame):
         ttk.Button(buttons, text="Add",
                    command=self.add_budget).pack(side="left")
         ttk.Button(buttons, text="Delete", command=self.delete_selected).pack(
+            side="left", padx=4)
+        ttk.Button(buttons, text="Refresh", command=self.load_data).pack(
             side="left", padx=4)
 
         # inline edit for "Target" on double-click
@@ -243,8 +243,10 @@ class BudgetsTab(ttk.Frame):
                 messagebox.showerror(
                     "Error", f"Failed to save budget: {str(e)}")
 
-        ttk.Button(d, text="Save", command=save).grid(
-            row=2, column=0, columnspan=2, pady=10)
+        button_frame = ttk.Frame(d)
+        button_frame.grid(row=2, column=0, columnspan=2, pady=10)
+        ttk.Button(button_frame, text="Save", command=save).pack(side="left", padx=5)
+        ttk.Button(button_frame, text="Cancel", command=d.destroy).pack(side="left", padx=5)
 
     def delete_selected(self):
         """Delete selected budget."""
