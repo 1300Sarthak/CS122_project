@@ -59,3 +59,60 @@ The application uses:
 
 - Sarthak Sethi
 - Satyansh Rai
+
+## How to Run the application
+
+1. **Enter terminal**
+
+2. **CD/Locate to project folder**
+
+3. **Install dependencies** (if needed)
+   `pip install -r requirements.txt`
+
+4. **Starting the application**
+   `python app.py`
+
+5. **Application is now ready**
+
+## How to Use the application itself
+
+### Getting Started
+
+**Step 1: Set up Accounts**
+
+- Go to the Accounts tab
+- Click "Add" to create your first account (Checking, Savings, Cash, or Credit)
+- Enter account name, type, and starting balance
+- You can create multiple accounts to track different sources of money
+
+**Step 2: Create Categories**
+
+- Go to the Categories tab
+- Click "Add" to create transaction categories
+- Choose between Income or Expense type
+- Add a description to help organize your spending
+- Common categories: Groceries, Rent, Salary, Entertainment, etc.
+
+**Step 3: Add Transactions**
+
+- Go to the Transactions tab
+- Click "Add" to record a new transaction
+- Select date, account, category, payee, amount, and add notes
+- Mark as "Planned" for future transactions or "Posted" for completed ones
+- Posted transactions automatically update account balances
+
+**Step 4: Set Budgets**
+
+- Go to the Budgets tab
+- Select the month and year you want to budget for
+- Click "Add" to set a budget target for a category
+- Double-click on the Target column to quickly edit budget amounts
+- View your spending vs. budget with status indicators (OK/Over)
+
+### Tips for Effective Use
+
+- **Filtering**: Use the filter bars in each tab to quickly find specific transactions, accounts, or categories
+- **Search**: Type in the search box to filter by name, payee, or notes
+- **Status Bar**: Check the bottom status bar for quick overview of month spending, planned amounts, and budget alarms
+- **Refresh**: Click the Refresh button in any tab to reload data from the database
+- **Planned vs Posted**: Planned transactions appear in gray italic text and don't affect account balances until marked as posted
