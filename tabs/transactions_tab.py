@@ -80,6 +80,10 @@ class TransactionsTab(ttk.Frame):
             "planned", foreground="gray40", font=("Segoe UI", 10, "italic"))
         self.tree.pack(fill="both", expand=True, padx=6, pady=6)
 
+        # Empty state message
+        self.empty_label = ttk.Label(
+            self, text="No transactions found", font=("Segoe UI", 11, "italic"), foreground="gray50")
+
         # Footer sum (computed locally from table rows)
         self.sum_label = ttk.Label(self, text="Sum: $0.00", anchor="e")
         self.sum_label.pack(fill="x", padx=8, pady=(0, 6))
@@ -153,6 +157,7 @@ class TransactionsTab(ttk.Frame):
             self._item_ids[item_id] = txn.id
 
         self.apply_filters()
+        self._update_empty_state()
 
     def apply_filters(self):
         """Apply filters to transaction list."""
@@ -201,6 +206,7 @@ class TransactionsTab(ttk.Frame):
                 self.tree.reattach(item_id, "", "end")
 
         self.refresh_sum()
+        self._update_empty_state()
 
     # helpers
     def _dollar_ok(self, text: str) -> bool:
@@ -223,6 +229,13 @@ class TransactionsTab(ttk.Frame):
             except Exception:
                 pass
         self.sum_label.config(text=f"Sum: ${total:,.2f}")
+
+    def _update_empty_state(self):
+        """Show or hide empty state message based on treeview content."""
+        if len(self.tree.get_children()) == 0:
+            self.empty_label.place(relx=0.5, rely=0.5, anchor="center")
+        else:
+            self.empty_label.place_forget()
 
     def _update_account_balance(self, account_id, amount, category_id, is_planned):
         """Update account balance when transaction is posted (not planned)."""

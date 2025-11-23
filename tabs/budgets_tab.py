@@ -42,6 +42,10 @@ class BudgetsTab(ttk.Frame):
         self.tree.column("Status", width=100, anchor="center")
         self.tree.pack(fill="both", expand=True, padx=6, pady=6)
 
+        # Empty state message
+        self.empty_label = ttk.Label(
+            self, text="No budgets found for this month", font=("Segoe UI", 11, "italic"), foreground="gray50")
+
         # Buttons
         buttons = ttk.Frame(self)
         buttons.pack(fill="x", padx=6, pady=4)
@@ -108,6 +112,8 @@ class BudgetsTab(ttk.Frame):
                                           status
                                       ])
             self._item_ids[item_id] = budget.id
+        
+        self._update_empty_state()
 
     def _edit_target_cell(self, event):
         sel = self.tree.selection()
@@ -156,6 +162,13 @@ class BudgetsTab(ttk.Frame):
 
         entry.bind("<Return>", save_edit)
         entry.bind("<FocusOut>", lambda e: entry.destroy())
+
+    def _update_empty_state(self):
+        """Show or hide empty state message based on treeview content."""
+        if len(self.tree.get_children()) == 0:
+            self.empty_label.place(relx=0.5, rely=0.5, anchor="center")
+        else:
+            self.empty_label.place_forget()
 
     def add_budget(self):
         """Add a new budget."""

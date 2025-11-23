@@ -44,6 +44,10 @@ class AccountsTab(ttk.Frame):
         self.tree.column("Balance", width=150, anchor="e")
         self.tree.pack(fill="both", expand=True, padx=6, pady=6)
 
+        # Empty state message
+        self.empty_label = ttk.Label(
+            self, text="No accounts found", font=("Segoe UI", 11, "italic"), foreground="gray50")
+
         # Footer sum (computed locally from table rows)
         self.sum_label = ttk.Label(
             self, text="Total Balance: $0.00", anchor="e")
@@ -74,6 +78,7 @@ class AccountsTab(ttk.Frame):
             self._item_ids[item_id] = acc.id
         self.apply_filters()
         self.refresh_sum()
+        self._update_empty_state()
 
     def apply_filters(self):
         """Apply filters to account list."""
@@ -100,6 +105,7 @@ class AccountsTab(ttk.Frame):
                 self.tree.reattach(item_id, "", "end")
 
         self.refresh_sum()
+        self._update_empty_state()
 
     # helpers
     def _dollar_ok(self, text: str) -> bool:
@@ -122,6 +128,13 @@ class AccountsTab(ttk.Frame):
             except Exception:
                 pass
         self.sum_label.config(text=f"Total Balance: ${total:,.2f}")
+
+    def _update_empty_state(self):
+        """Show or hide empty state message based on treeview content."""
+        if len(self.tree.get_children()) == 0:
+            self.empty_label.place(relx=0.5, rely=0.5, anchor="center")
+        else:
+            self.empty_label.place_forget()
 
     # Dialogs/actions
     def add_account(self):

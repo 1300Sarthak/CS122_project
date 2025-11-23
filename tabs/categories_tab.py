@@ -43,6 +43,10 @@ class CategoriesTab(ttk.Frame):
         self.tree.column("Description", width=200)
         self.tree.pack(fill="both", expand=True, padx=6, pady=6)
 
+        # Empty state message
+        self.empty_label = ttk.Label(
+            self, text="No categories found", font=("Segoe UI", 11, "italic"), foreground="gray50")
+
         # Buttons
         buttons = ttk.Frame(self)
         buttons.pack(fill="x", padx=6, pady=4)
@@ -67,6 +71,7 @@ class CategoriesTab(ttk.Frame):
                                        values=[cat.name, cat.type, cat.description or ""])
             self._item_ids[item_id] = cat.id
         self.apply_filters()
+        self._update_empty_state()
 
     def apply_filters(self):
         """Apply filters to category list."""
@@ -93,6 +98,8 @@ class CategoriesTab(ttk.Frame):
             if item_id not in self.tree.get_children():
                 self.tree.reattach(item_id, "", "end")
 
+        self._update_empty_state()
+
     # helpers
     def _selected(self):
         sel = self.tree.selection()
@@ -101,6 +108,13 @@ class CategoriesTab(ttk.Frame):
     def _get_category_id(self, item_id):
         """Get category ID from treeview item ID."""
         return self._item_ids.get(item_id)
+
+    def _update_empty_state(self):
+        """Show or hide empty state message based on treeview content."""
+        if len(self.tree.get_children()) == 0:
+            self.empty_label.place(relx=0.5, rely=0.5, anchor="center")
+        else:
+            self.empty_label.place_forget()
 
     # Dialogs/actions
     def add_category(self):
