@@ -5,37 +5,35 @@ from db.models import Category, Transaction, Budget
 
 
 class CategoriesTab(ttk.Frame):
+    """Tab is meant to track and show different categories for the type of purchase chosen."""
     def __init__(self, parent, main_window):
         super().__init__(parent)
         self.main_window = main_window
         self.session = main_window.session
-        self._item_ids = {}  # Map treeview item IDs to category IDs
+        self._item_ids = {}
         self._build_ui()
         self.load_data()
 
     def _build_ui(self):
+        """Builds the UI using the elements specified below."""
         # Filter bar
         bar = ttk.Frame(self)
         bar.pack(fill="x", padx=6, pady=4)
 
         ttk.Label(bar, text="Type:").pack(side="left")
         self.type_var = tk.StringVar(value="All")
-        ttk.Combobox(bar, textvariable=self.type_var, values=[
-                     "All", "Income", "Expense"], width=12, state="readonly").pack(side="left", padx=4)
+        ttk.Combobox(bar, textvariable=self.type_var, values=["All", "Income", "Expense"], width=12, state="readonly").pack(side="left", padx=4)
 
         ttk.Label(bar, text="Search:").pack(side="left")
         self.search_var = tk.StringVar()
         self.search_var.trace_add("write", lambda *_: self.apply_filters())
-        ttk.Entry(bar, textvariable=self.search_var,
-                  width=16).pack(side="left", padx=4)
+        ttk.Entry(bar, textvariable=self.search_var, width=16).pack(side="left", padx=4)
 
-        ttk.Button(bar, text="Apply", command=self.apply_filters).pack(
-            side="left", padx=4)
+        ttk.Button(bar, text="Apply", command=self.apply_filters).pack(side="left", padx=4)
 
         # Categories table
         cols = ("Name", "Type", "Description")
-        self.tree = ttk.Treeview(
-            self, columns=cols, show="headings", selectmode="browse")
+        self.tree = ttk.Treeview(self, columns=cols, show="headings", selectmode="browse")
         for c in cols:
             self.tree.heading(c, text=c)
         self.tree.column("Name", width=200)
@@ -43,21 +41,16 @@ class CategoriesTab(ttk.Frame):
         self.tree.column("Description", width=200)
         self.tree.pack(fill="both", expand=True, padx=6, pady=6)
 
-        # Empty state message
-        self.empty_label = ttk.Label(
-            self, text="No categories found", font=("Segoe UI", 11, "italic"), foreground="gray50")
+        # Empty state
+        self.empty_label = ttk.Label(self, text="No categories found", font=("Segoe UI", 11, "italic"), foreground="gray50")
 
         # Buttons
         buttons = ttk.Frame(self)
         buttons.pack(fill="x", padx=6, pady=4)
-        ttk.Button(buttons, text="Add",
-                   command=self.add_category).pack(side="left")
-        ttk.Button(buttons, text="Edit", command=self.edit_category).pack(
-            side="left", padx=4)
-        ttk.Button(buttons, text="Delete", command=self.delete_selected).pack(
-            side="left", padx=4)
-        ttk.Button(buttons, text="Refresh", command=self.load_data).pack(
-            side="left", padx=4)
+        ttk.Button(buttons, text="Add", command=self.add_category).pack(side="left")
+        ttk.Button(buttons, text="Edit", command=self.edit_category).pack(side="left", padx=4)
+        ttk.Button(buttons, text="Delete", command=self.delete_selected).pack(side="left", padx=4)
+        ttk.Button(buttons, text="Refresh", command=self.load_data).pack(side="left", padx=4)
 
     def load_data(self):
         """Load categories from database."""
@@ -67,8 +60,7 @@ class CategoriesTab(ttk.Frame):
 
         categories = self.session.query(Category).all()
         for cat in categories:
-            item_id = self.tree.insert("", "end",
-                                       values=[cat.name, cat.type, cat.description or ""])
+            item_id = self.tree.insert("", "end", values=[cat.name, cat.type, cat.description or ""])
             self._item_ids[item_id] = cat.id
         self.apply_filters()
         self._update_empty_state()
@@ -118,6 +110,7 @@ class CategoriesTab(ttk.Frame):
 
     # Dialogs/actions
     def add_category(self):
+        """Handles adding a category to the categories treeview and database"""
         d = tk.Toplevel(self)
         d.title("Add Category")
         d.geometry("320x180")
@@ -127,27 +120,20 @@ class CategoriesTab(ttk.Frame):
         description_var = tk.StringVar()
 
         def row(r, label, widget):
-            ttk.Label(d, text=label).grid(
-                row=r, column=0, sticky="e", padx=6, pady=4)
+            ttk.Label(d, text=label).grid(row=r, column=0, sticky="e", padx=6, pady=4)
             widget.grid(row=r, column=1, sticky="w", padx=6, pady=4)
 
         row(0, "Name", ttk.Entry(d, textvariable=name_var, width=20))
-        row(1, "Type", ttk.Combobox(d, textvariable=type_var, values=[
-            "Income", "Expense"], width=18, state="readonly"))
+        row(1, "Type", ttk.Combobox(d, textvariable=type_var, values=["Income", "Expense"], width=18, state="readonly"))
         row(2, "Description", ttk.Entry(d, textvariable=description_var, width=22))
 
         def save():
             if not name_var.get().strip():
-                messagebox.showerror(
-                    "Invalid Name", "Category name is required.")
+                messagebox.showerror("Invalid Name", "Category name is required.")
                 return
 
             try:
-                category = Category(
-                    name=name_var.get().strip(),
-                    type=type_var.get(),
-                    description=description_var.get().strip()
-                )
+                category = Category(name=name_var.get().strip(), type=type_var.get(), description=description_var.get().strip())
                 self.session.add(category)
                 self.session.commit()
                 self.load_data()
@@ -155,21 +141,18 @@ class CategoriesTab(ttk.Frame):
                 d.destroy()
             except IntegrityError:
                 self.session.rollback()
-                messagebox.showerror(
-                    "Error", "A category with this name already exists.")
+                messagebox.showerror("Error", "A category with this name already exists.")
             except Exception as e:
                 self.session.rollback()
-                messagebox.showerror(
-                    "Error", f"Failed to save category: {str(e)}")
+                messagebox.showerror("Error", f"Failed to save category: {str(e)}")
 
         button_frame = ttk.Frame(d)
         button_frame.grid(row=3, column=0, columnspan=2, pady=10)
-        ttk.Button(button_frame, text="Save",
-                   command=save).pack(side="left", padx=5)
-        ttk.Button(button_frame, text="Cancel",
-                   command=d.destroy).pack(side="left", padx=5)
+        ttk.Button(button_frame, text="Save", command=save).pack(side="left", padx=5)
+        ttk.Button(button_frame, text="Cancel", command=d.destroy).pack(side="left", padx=5)
 
     def edit_category(self):
+        """Handles editing a category in the treeview qnd updating the database"""
         sel = self._selected()
         if not sel:
             messagebox.showinfo("Edit", "Select a category to edit.")
@@ -194,29 +177,24 @@ class CategoriesTab(ttk.Frame):
         description_var = tk.StringVar(value=item_vals[2])
 
         def row(r, label, widget):
-            ttk.Label(d, text=label).grid(
-                row=r, column=0, sticky="e", padx=6, pady=4)
+            ttk.Label(d, text=label).grid(row=r, column=0, sticky="e", padx=6, pady=4)
             widget.grid(row=r, column=1, sticky="w", padx=6, pady=4)
 
         row(0, "Name", ttk.Entry(d, textvariable=name_var, width=22))
-        row(1, "Type", ttk.Combobox(d, textvariable=type_var, values=[
-            "Income", "Expense"], width=20, state="readonly"))
+        row(1, "Type", ttk.Combobox(d, textvariable=type_var, values=["Income", "Expense"], width=20, state="readonly"))
         row(2, "Description", ttk.Entry(d, textvariable=description_var, width=26))
 
         def save():
             if not name_var.get().strip():
-                messagebox.showerror(
-                    "Invalid Name", "Category name is required.")
+                messagebox.showerror("Invalid Name", "Category name is required.")
                 return
 
             try:
                 # Check if name changed and if new name conflicts
                 if name_var.get().strip() != category.name:
-                    existing = self.session.query(Category).filter_by(
-                        name=name_var.get().strip()).first()
+                    existing = self.session.query(Category).filter_by(name=name_var.get().strip()).first()
                     if existing:
-                        messagebox.showerror(
-                            "Error", "A category with this name already exists.")
+                        messagebox.showerror("Error", "A category with this name already exists.")
                         return
 
                 category.name = name_var.get().strip()
@@ -228,17 +206,15 @@ class CategoriesTab(ttk.Frame):
                 d.destroy()
             except Exception as e:
                 self.session.rollback()
-                messagebox.showerror(
-                    "Error", f"Failed to update category: {str(e)}")
+                messagebox.showerror("Error", f"Failed to update category: {str(e)}")
 
         button_frame = ttk.Frame(d)
         button_frame.grid(row=3, column=0, columnspan=2, pady=10)
-        ttk.Button(button_frame, text="Save",
-                   command=save).pack(side="left", padx=5)
-        ttk.Button(button_frame, text="Cancel",
-                   command=d.destroy).pack(side="left", padx=5)
+        ttk.Button(button_frame, text="Save", command=save).pack(side="left", padx=5)
+        ttk.Button(button_frame, text="Cancel", command=d.destroy).pack(side="left", padx=5)
 
     def delete_selected(self):
+        """Handles deleting a category from the treeview and database"""
         selected = self._selected()
         if not selected:
             messagebox.showinfo("Delete", "Select a category to delete.")
@@ -252,17 +228,12 @@ class CategoriesTab(ttk.Frame):
         if not category:
             return
 
-        # Check if category is used by transactions or budgets
-        transaction_count = self.session.query(Transaction).filter_by(
-            category_id=cat_id).count()
-        budget_count = self.session.query(Budget).filter_by(
-            category_id=cat_id).count()
+        # Checks if a category is used by transactions or budgets
+        transaction_count = self.session.query(Transaction).filter_by(category_id=cat_id).count()
+        budget_count = self.session.query(Budget).filter_by(category_id=cat_id).count()
 
         if transaction_count > 0 or budget_count > 0:
-            messagebox.showerror(
-                "Cannot Delete",
-                f"This category is used by {transaction_count} transaction(s) and {budget_count} budget(s). "
-                "Please delete or update them first.")
+            messagebox.showerror("Cannot Delete", f"This category is used by {transaction_count} transaction(s) and {budget_count} budget(s). " "Please delete or update them first.")
             return
 
         if messagebox.askyesno("Confirm Delete", f"Delete category '{category.name}'?"):
@@ -273,5 +244,4 @@ class CategoriesTab(ttk.Frame):
                 self.main_window.refresh_all_tabs()
             except Exception as e:
                 self.session.rollback()
-                messagebox.showerror(
-                    "Error", f"Failed to delete category: {str(e)}")
+                messagebox.showerror("Error", f"Failed to delete category: {str(e)}")
