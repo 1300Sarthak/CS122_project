@@ -225,7 +225,19 @@ class TransactionsTab(ttk.Frame):
         for i in self.tree.get_children():
             vals = self.tree.item(i, "values")
             try:
-                total += float(vals[4].replace(",", ""))
+                amount = float(vals[4].replace(",", ""))
+                # Get transaction ID and look up category type
+                txn_id = self._get_transaction_id(i)
+                if txn_id:
+                    transaction = self.session.query(Transaction).filter_by(id=txn_id).first()
+                    if transaction:
+                        category = self.session.query(Category).filter_by(id=transaction.category_id).first()
+                        if category:
+                            # Income adds to sum, Expense subtracts from sum
+                            if category.type == "Income":
+                                total += amount
+                            else:  # Expense
+                                total -= amount
             except Exception:
                 pass
         self.sum_label.config(text=f"Sum: ${total:,.2f}")
