@@ -39,9 +39,7 @@ class MainWindow(tk.Tk):
         nb.pack(fill="both", expand=True)
 
         # Status bar
-        self.status = ttk.Label(
-            self, text="Month Spend: $0.00 | Planned: $0.00 | Alarms: 0", anchor="w"
-        )
+        self.status = ttk.Label(self, text="Month Spend: $0.00 | Planned: $0.00 | Alarms: 0", anchor="w")
         self.status.pack(fill="x", side="bottom")
 
     def update_status_bar(self):
@@ -62,17 +60,12 @@ class MainWindow(tk.Tk):
             month_spend = sum(float(t.amount) for t in posted_transactions)
 
             # Calculate planned amount
-            planned_transactions = self.session.query(Transaction).filter(
-                Transaction.planned == True
-            ).all()
+            planned_transactions = self.session.query(Transaction).filter(Transaction.planned == True).all()
 
             planned_total = sum(float(t.amount) for t in planned_transactions)
 
-            # Count alarms (budgets over target)
-            budgets = self.session.query(Budget).filter(
-                Budget.month == current_month,
-                Budget.year == current_year
-            ).all()
+            # Count alarms
+            budgets = self.session.query(Budget).filter(Budget.month == current_month, Budget.year == current_year).all()
 
             alarms = 0
             for budget in budgets:
@@ -89,9 +82,7 @@ class MainWindow(tk.Tk):
                 if spent > float(budget.target_amount):
                     alarms += 1
 
-            self.status.config(
-                text=f"Month Spend: ${month_spend:,.2f} | Planned: ${planned_total:,.2f} | Alarms: {alarms}"
-            )
+            self.status.config(text=f"Month Spend: ${month_spend:,.2f} | Planned: ${planned_total:,.2f} | Alarms: {alarms}")
         except Exception as e:
             self.status.config(text=f"Error updating status: {str(e)}")
 

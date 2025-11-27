@@ -25,11 +25,9 @@ def make_date_triple(parent, text):
     d_var = tk.StringVar(value=f"{d0:02d}")
     y_var = tk.StringVar(value=str(y0))
 
-    m_cb = ttk.Combobox(frm, textvariable=m_var,
-                        values=months, width=4, state="readonly")
+    m_cb = ttk.Combobox(frm, textvariable=m_var, values=months, width=4, state="readonly")
     d_cb = ttk.Combobox(frm, textvariable=d_var, width=4, state="readonly")
-    y_cb = ttk.Combobox(frm, textvariable=y_var,
-                        values=years, width=6, state="readonly")
+    y_cb = ttk.Combobox(frm, textvariable=y_var, values=years, width=6, state="readonly")
 
     m_cb.pack(side="left")
     ttk.Label(frm, text="/").pack(side="left")
@@ -47,8 +45,7 @@ def make_date_triple(parent, text):
             d_var.set(f"{max_day:02d}")
 
     def _sync_iso(*_):
-        text.set(
-            f"{int(y_var.get()):04d}-{int(m_var.get()):02d}-{int(d_var.get()):02d}")
+        text.set(f"{int(y_var.get()):04d}-{int(m_var.get()):02d}-{int(d_var.get()):02d}")
 
     for v in (m_var, y_var):
         v.trace_add("write", lambda *_: (_sync_days(), _sync_iso()))
@@ -58,4 +55,3 @@ def make_date_triple(parent, text):
     _sync_iso()
 
     return frm
-
